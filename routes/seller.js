@@ -91,6 +91,14 @@ router.post('/seller/product', sellerAuth, validate('newProduct'), async(req,res
 router.delete('/seller/product/:id', sellerAuth, async(req,res) =>{
 
     try{
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return req.status(400).send({
+                errors: [{
+                    'msg': 'Operation failed'
+                }]
+            })
+        }
+
         const product = await Product.findOneAndDelete({_id:req.params.id, owner:req.user._id})
         if(!product){
             res.status(400).send({
@@ -118,6 +126,14 @@ router.delete('/seller/product/:id', sellerAuth, async(req,res) =>{
 router.patch('/seller/product/:id', sellerAuth, async(req,res) =>{
 
     try{
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return req.status(400).send({
+                errors: [{
+                    'msg': 'Operation failed'
+                }]
+            })
+        }
+        
         const updateObject = {};
         if(!req.body.name && !req.body.description){
            return res.status(400).send({

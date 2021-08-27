@@ -44,7 +44,7 @@ const customerAuth = async (req, res, next) => {
     try {
         const token = req.header('Authorization').replace('Bearer ', '')
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        if (decode.role !== 'Customer') {
+        if (decoded.role !== 'Customer') {
             return res.status(400).send({
                 error: [{
                     'msg': "Please re-authenticate and try again"
@@ -81,7 +81,7 @@ const adminAuth = async (req, res, next) => {
     try {
         const token = req.header('Authorization').replace('Bearer ', '')
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        if (decode.role !== 'Admin') {
+        if (decoded.role !== 'Admin') {
             return res.status(400).send({
                 error: [{
                     'msg': "Please re-authenticate and try again"
@@ -102,6 +102,7 @@ const adminAuth = async (req, res, next) => {
         next()
 
     } catch (e) {
+        console.log(e)
         return res.status(500).send({
             error: [{
                 'msg': "Server Issue"

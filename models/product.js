@@ -16,14 +16,7 @@ const productSchema = mongoose.Schema({
     },
 
     description:{
-        type:String,
-        required:true,
-        trim:true,
-        validator(value){
-            if(validator.isEmpty(value)){
-                throw new Error('Product name must not be empty')
-            }
-        }
+        type:String
     },
 
     // image:{
@@ -41,6 +34,11 @@ const productSchema = mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         required:true,
         ref:'User'
+    },
+    approvedByAdmin:{
+        type:Boolean,
+        required:true,
+        default:false
     }
 
 })

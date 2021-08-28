@@ -161,7 +161,7 @@ router.post('/wishlist/:id', customerAuth, async (req,res)=>{
 
     try{
         if (!mongoose.isValidObjectId(req.params.id)) {
-            return req.status(400).send({
+            return res.status(400).send({
                 errors: [{
                     'msg': 'Operation failed'
                 }]

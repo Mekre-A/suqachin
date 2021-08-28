@@ -1,6 +1,7 @@
 const express = require('express')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
+const mongoose = require('mongoose')
 
 
 const validate = require('../middleware/validation');
@@ -9,7 +10,11 @@ const {
 } = require('express-validator')
 
 const router = express.Router();
-const User = require('../models/users')
+const User = require('../models/users');
+const { customerAuth } = require('../middleware/authentication');
+const Product = require('../models/product');
+const Wishlist = require('../models/wishlist')
+
 
 
 router.post('/signup', validate('signup'), async (req, res) => {
@@ -106,6 +111,92 @@ router.post('/login', validate('login'), async (req, res) => {
     } catch (e) {
         console.log(e)
         res.status(500).send({
+            error: e
+        })
+    }
+
+})
+
+router.get('/products', customerAuth, async (req,res)=>{
+
+    try{
+        const product = await Product.find({approvedByAdmin:true})
+        res.status(200).send(product)
+    
+    } catch(e){
+        console.log(e)
+        res.status(500).send({
+            error: e
+        })
+    }
+
+})
+
+
+router.get('/buy/:id', customerAuth, async (req,res)=>{
+
+    try{
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return req.status(400).send({
+                errors: [{
+                    'msg': 'Operation failed'
+                }]
+            })
+        }
+
+        const product = await Product.find({approvedByAdmin:true, _id:req.params.id})
+        res.status(200).send(product)
+    
+    } catch(e){
+        console.log(e)
+        res.status(500).send({
+            error: e
+        })
+    }
+
+})
+
+
+router.post('/wishlist/:id', customerAuth, async (req,res)=>{
+
+    try{
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return req.status(400).send({
+                errors: [{
+                    'msg': 'Operation failed'
+                }]
+            })
+        }
+
+        const product = await Product.findOne({approvedByAdmin:true, _id:req.params.id})
+
+        if(!product){
+            res.status(400).send({
+                errors:[
+                    {
+                        msg:'Product not found'
+                    }
+                ]
+            })
+        }
+
+        const userWishes = await Wishlist.findOne({owner:req.user._id})
+        if(!userWishes){
+            const wishlist = new Wishlist({owner:req.user._id, items:[
+                req.params.id
+            ]})
+            await wishlist.save()
+
+            return  res.status(200).send(wishlist)
+        } else{
+            userWishes.items.push(req.params.id)
+            await userWishes.save()
+           return res.status(200).send(userWishes)
+        }
+
+    } catch(e){
+        console.log(e)
+        return  res.status(500).send({
             error: e
         })
     }

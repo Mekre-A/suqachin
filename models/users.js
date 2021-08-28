@@ -39,6 +39,11 @@ const userSchema = new mongoose.Schema({
                     throw new Error('Please enter a stronger password')
             }
         }
+    },
+    verified:{
+        type:Boolean,
+        required:true,
+        default:false
     }
 }, {
     timestamps:true
@@ -49,6 +54,14 @@ userSchema.methods.generateAuthToken = async function(){
     const user = this;
 
     const token = jwt.sign({_id:user._id.toString(), role:user.role}, process.env.JWT_SECRET)
+    return token
+}
+
+userSchema.methods.generateVerificationToken = async function(){
+
+    const user = this;
+
+    const token = jwt.sign({_id:user._id.toString()}, process.env.JWT_SECRET, {expiresIn: 60 * 20})
     return token
 }
 

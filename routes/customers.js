@@ -3,6 +3,7 @@ const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const {
     sendWelcomeEmail
 } = require('../utils/email')
@@ -187,7 +188,7 @@ router.get('/products', customerAuth, async (req, res) => {
 })
 
 
-router.get('/buy/:id', customerAuth, async (req, res) => {
+router.post('/buy/:id', customerAuth, async (req, res) => {
 
     try {
         if (!mongoose.isValidObjectId(req.params.id)) {
@@ -202,6 +203,36 @@ router.get('/buy/:id', customerAuth, async (req, res) => {
             approvedByAdmin: true,
             _id: req.params.id
         })
+
+        const token = await stripe.tokens.create({
+            card: {
+              number: '4242424242424242',
+              exp_month: 8,
+              exp_year: 2022,
+              cvc: '314',
+            },
+          });
+
+          
+
+        try {
+            const customer = await stripe.customers.create({
+                name: req.user.name,
+                email: req.user.email,
+                source: token.id //req.body.stripeToken
+            });
+            stripe.charges.create({
+                amount: req.body.amount * 100,
+                currency: 'usd',
+                customer: customer.id,
+                description: 'Thank you for your purchase.'
+            })
+
+        } catch (err) {
+           return res.status(400).send(err)
+        }
+
+
         res.status(200).send(product)
 
     } catch (e) {

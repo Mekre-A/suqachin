@@ -4,7 +4,6 @@ const {
     setUpDatabase
 } = require('./fixtures/mongoose')
 
-const mongoose = require('mongoose')
 const Product = require('../models/product')
 
 

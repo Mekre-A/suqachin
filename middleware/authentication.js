@@ -4,6 +4,13 @@ const User = require('../models/users')
 
 const sellerAuth = async (req, res, next) => {
 
+    if(!req.header('Authorization')){
+        return res.status(400).send({
+            error: [{
+                'msg': "Please re-authenticate and try again"
+            }]
+        })
+    }
     try {
         const token = req.header('Authorization').replace('Bearer ', '')
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -42,6 +49,15 @@ const sellerAuth = async (req, res, next) => {
 
 const customerAuth = async (req, res, next) => {
 
+    
+    if(!req.header('Authorization')){
+        return res.status(400).send({
+            error: [{
+                'msg': "Please re-authenticate and try again"
+            }]
+        })
+    }
+
     try {
         const token = req.header('Authorization').replace('Bearer ', '')
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -79,6 +95,15 @@ const customerAuth = async (req, res, next) => {
 
 const adminAuth = async (req, res, next) => {
 
+    
+    if(!req.header('Authorization')){
+        return res.status(400).send({
+            error: [{
+                'msg': "Please re-authenticate and try again"
+            }]
+        })
+    }
+    
     try {
         const token = req.header('Authorization').replace('Bearer ', '')
         const decoded = jwt.verify(token, process.env.JWT_SECRET)

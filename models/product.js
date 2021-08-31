@@ -39,6 +39,20 @@ const productSchema = mongoose.Schema({
         type:Boolean,
         required:true,
         default:false
+    },
+    rejectedByAdmin:{
+        type:Boolean,
+        required:true,
+        default:false
+    },
+    price:{
+        type: Number,
+        required:true
+    },
+    purchase:{
+        type:Number,
+        required:false,
+        default:0
     }
 
 })

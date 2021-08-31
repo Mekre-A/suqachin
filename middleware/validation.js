@@ -30,6 +30,12 @@ validate = (method) => {
         case 'newProduct' : {
             return [
                 body('name').not().isEmpty().withMessage('Product name must not be empty'),
+                body('price').isDecimal().withMessage('Product name must not be empty'),
+            ]
+        }
+        case 'approve':{
+            return [
+                body('status').isBoolean().withMessage('status must be a boolean'),
             ]
         }
     }

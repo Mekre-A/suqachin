@@ -143,7 +143,8 @@ router.post('/login', validate('login'), async (req, res) => {
             if (await bcrypt.compare(req.body.password, user.password)) {
                 const token = await user.generateAuthToken();
                 return res.status(200).send({
-                    token
+                    token,
+                    user
                 })
             }
             return res.status(400).send({
@@ -199,7 +200,7 @@ router.post('/buy/:id', customerAuth, async (req, res) => {
             })
         }
 
-        const product = await Product.find({
+        const product = await Product.findOne({
             approvedByAdmin: true,
             _id: req.params.id
         })
@@ -222,7 +223,7 @@ router.post('/buy/:id', customerAuth, async (req, res) => {
                 source: token.id //req.body.stripeToken
             });
             stripe.charges.create({
-                amount: req.body.amount * 100,
+                amount: product.price * 100,
                 currency: 'usd',
                 customer: customer.id,
                 description: 'Thank you for your purchase.'
@@ -231,6 +232,10 @@ router.post('/buy/:id', customerAuth, async (req, res) => {
         } catch (err) {
            return res.status(400).send(err)
         }
+
+        product.purchase = product.purchase + 1;
+
+        await product.save()
 
 
         res.status(200).send(product)
@@ -295,6 +300,52 @@ router.post('/wishlist/:id', customerAuth, async (req, res) => {
         })
     }
 
+})
+
+
+router.delete('/wishlist/:id', customerAuth, async(req,res) =>{
+
+    try{
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return req.status(400).send({
+                errors: [{
+                    'msg': 'Operation failed'
+                }]
+            })
+        }
+
+        const wishListItems = await Wishlist.findOne({
+            owner:req.user._id
+        })
+
+        if(!wishListItems){
+            res.status(400).send({
+                error:[
+                    {
+                        'msg':'Deletion failed'
+                    }
+                ]
+            })
+        }
+
+        const updatedItems = wishListItems.items.filter((item)=> item.toString() !== req.params.id)
+
+        wishListItems.items = updatedItems;
+
+        await wishListItems.save()
+        
+        res.status(200).send(wishListItems)
+
+    } catch(e){
+        console.log(e)
+        return res.status(500).send({
+            error:[
+                {
+                    msg:'Server Issue'
+                }
+            ]
+        })
+    }
 })
 
 module.exports = router;

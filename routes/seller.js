@@ -5,10 +5,15 @@ const {
     validationResult
 } = require('express-validator')
 
+const {
+    sendWelcomeEmail
+} = require('../utils/email')
+
 
 const User = require('../models/users')
 const Product = require('../models/product')
 const {sellerAuth} = require('../middleware/authentication')
+const Message = require('../models/message')
 
 const router = express.Router();
 
@@ -46,11 +51,12 @@ router.post('/seller/signup', validate('signup'), async (req, res) => {
 
         await user.save();
 
-        const token = await user.generateAuthToken()
+        const token = await user.generateVerificationToken()
+
+        sendWelcomeEmail(user.email, user.username, `http://localhost:3333/verifyAccount/${token}`)
 
         res.status(201).send({
-            user,
-            token
+            user
         })
 
 
@@ -66,10 +72,18 @@ router.post('/seller/signup', validate('signup'), async (req, res) => {
 router.post('/seller/product', sellerAuth, validate('newProduct'), async(req,res)=>{
 
     try{
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                errors: errors.array()
+            });
+        }
+
         const product = new Product({
             name:req.body.name,
             description:req.body.description,
-            owner:mongoose.Types.ObjectId(req.user._id)
+            owner:mongoose.Types.ObjectId(req.user._id),
+            price:req.body.price
         })
 
         await product.save();
@@ -92,7 +106,7 @@ router.delete('/seller/product/:id', sellerAuth, async(req,res) =>{
 
     try{
         if (!mongoose.isValidObjectId(req.params.id)) {
-            return req.status(400).send({
+            return res.status(400).send({
                 errors: [{
                     'msg': 'Operation failed'
                 }]
@@ -113,6 +127,7 @@ router.delete('/seller/product/:id', sellerAuth, async(req,res) =>{
         res.status(200).send(product)
 
     } catch(e){
+        console.log(e)
         return res.status(500).send({
             error:[
                 {
@@ -135,7 +150,7 @@ router.patch('/seller/product/:id', sellerAuth, async(req,res) =>{
         }
         
         const updateObject = {};
-        if(!req.body.name && !req.body.description){
+        if(!req.body.name && !req.body.description && !req.body.price){
            return res.status(400).send({
                 error:[
                     {
@@ -149,6 +164,9 @@ router.patch('/seller/product/:id', sellerAuth, async(req,res) =>{
             } 
             if(req.body.description){
                 updateObject.description = req.body.description
+            } 
+            if(req.body.price){
+                updateObject.price = req.body.price
             }
         }
         const product = await Product.findOneAndUpdate({_id:req.params.id, owner:req.user._id}, updateObject)
@@ -173,6 +191,53 @@ router.patch('/seller/product/:id', sellerAuth, async(req,res) =>{
             ]
         })
     }
+})
+
+router.get('/seller/messages', sellerAuth, async (req,res) =>{
+
+    try{
+    const messages = await Message.find({
+        receiver:req.user._id
+    })
+
+    res.status(200).send(messages)
+    } catch(e){
+        console.log(e)
+            return res.status(500).send({
+            error:[
+                {
+                    msg:'Server Issue'
+                }
+            ]
+        })
+    }
+    
+
+
+})
+
+
+router.get('/seller/products', sellerAuth, async (req,res) =>{
+
+    try{
+    const products = await Product.find({
+        owner:req.user._id
+    })
+
+    res.status(200).send(products)
+    } catch(e){
+        console.log(e)
+            return res.status(500).send({
+            error:[
+                {
+                    msg:'Server Issue'
+                }
+            ]
+        })
+    }
+    
+
+
 })
 
 module.exports = router

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon -r dotenv/config index.js",
-    "test": "env-cmd -f ./tests/.env jest --watch --runInBand"
+    "test": "env-cmd -f ./tests/.env jest --watchAll --runInBand"
   },
   "jest": {
     "testEnvironment": "node"
@@ -27,6 +27,8 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.1",
     "stripe": "^8.171.0",
+    "swagger-jsdoc": "^6.1.0",
+    "swagger-ui-express": "^4.1.6",
     "validator": "^13.6.0"
   }
 }

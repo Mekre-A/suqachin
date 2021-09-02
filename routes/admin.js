@@ -74,6 +74,8 @@ router.post('/admin/signup', validate('signup'), async (req, res) => {
 
 });
 
+
+
 router.post('/admin/approve/:id', adminAuth, validate('approve'), async (req, res) => {
 
     const errors = validationResult(req);
